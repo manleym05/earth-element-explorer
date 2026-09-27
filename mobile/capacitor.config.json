@@ -1,0 +1,12 @@
+{
+  "appId": "com.CHANGEME.earthexplorer",
+  "appName": "Earth Element Explorer",
+  "webDir": "www",
+  "backgroundColor": "#14222e",
+  "ios": { "contentInset": "never", "backgroundColor": "#14222e" },
+  "android": { "backgroundColor": "#14222e" },
+  "plugins": {
+    "SplashScreen": { "launchShowDuration": 1200, "backgroundColor": "#14222e", "showSpinner": false },
+    "StatusBar": { "style": "DARK", "overlaysWebView": true }
+  }
+}

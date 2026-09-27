@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Earth Element Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/cesium@1.145.0/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <link href="style.css" rel="stylesheet">
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cesium@1.145.0/Build/Cesium/Cesium.js"></script>
+</head>
+<body>
+  <div id="globe" aria-label="3D globe"></div>
+  <div id="tip" role="tooltip" hidden></div>
+
+  <aside id="panel" aria-label="Explorer panel">
+    <header class="element">
+      <button id="tile" class="tile" aria-label="Choose an element" aria-controls="ptable-wrap">
+        <span class="z" id="el-z">79</span><span class="sym" id="el-sym">Au</span><span class="nm" id="el-name">Gold</span>
+      </button>
+      <div class="element-meta">
+        <h1 id="el-title">Gold</h1>
+        <p id="el-count">Loading…</p>
+      </div>
+    </header>
+    <p id="el-crit" class="crit" hidden></p>
+    <p id="el-class" class="el-class"></p>
+    <p id="el-empty" class="empty" hidden></p>
+
+    <section aria-labelledby="layers-h">
+      <h2 id="layers-h">Layers</h2>
+      <div class="layer" id="ly-sites">
+        <label><input type="checkbox" checked data-layer="sites"> Deposits and occurrences</label>
+        <input type="range" min="0" max="100" value="100" aria-label="Deposit marker opacity" data-opacity="sites">
+      </div>
+      <div class="layer" id="ly-prod">
+        <label><input type="checkbox" checked data-layer="prod"> Production by country</label>
+        <input type="range" min="0" max="100" value="55" aria-label="Production layer opacity" data-opacity="prod">
+      </div>
+      <div class="layer" id="ly-hosts" hidden>
+        <label><input type="checkbox" checked data-layer="hosts"> Likely host-ore mines</label>
+        <input type="range" min="0" max="100" value="80" aria-label="Host-ore marker opacity" data-opacity="hosts">
+      </div>
+      <div class="layer" id="ly-trade" hidden>
+        <label><input type="checkbox" checked data-layer="trade"> Trade flows (2023)</label>
+        <input type="range" min="0" max="100" value="80" aria-label="Trade arc opacity" data-opacity="trade">
+      </div>
+      <div class="layer">
+        <label><input type="checkbox" data-layer="plates"> Tectonic plate boundaries</label>
+        <input type="range" min="0" max="100" value="70" aria-label="Plate boundary opacity" data-opacity="plates">
+      </div>
+      <div class="layer">
+        <label><input type="checkbox" checked data-layer="surface"> Surface imagery</label>
+        <input type="range" min="10" max="100" value="100" aria-label="Surface opacity" data-opacity="surface">
+      </div>
+      <div class="layer cut">
+        <label for="cut">Cutaway into the interior</label>
+        <input id="cut" type="range" min="0" max="90" value="0" aria-describedby="cut-note">
+        <p id="cut-note" class="note">Slide to open a wedge facing you. Lowering surface opacity shows the interior through the planet.</p>
+      </div>
+    </section>
+
+    <section id="sec-sites" aria-labelledby="sites-h">
+      <h2 id="sites-h">Deposits</h2>
+      <div class="search">
+        <input id="q" type="search" placeholder="Search sites by name or deposit type" aria-label="Search sites" autocomplete="off">
+        <ul id="q-results"></ul>
+      </div>
+      <div class="seg" role="group" aria-label="Color markers by">
+        <button type="button" data-colorby="dev" aria-pressed="true">Status</button>
+        <button type="button" data-colorby="op" aria-pressed="false">Mining method</button>
+        <button type="button" data-colorby="src" aria-pressed="false">Source</button>
+      </div>
+      <ul id="legend"></ul>
+      <div class="seg small" role="group" aria-label="Marker display">
+        <button type="button" data-mode="auto" aria-pressed="true">Auto</button>
+        <button type="button" data-mode="sites" aria-pressed="false">Every site</button>
+        <button type="button" data-mode="density" aria-pressed="false">Density</button>
+      </div>
+      <p id="mode-note" class="note"></p>
+    </section>
+
+    <section id="sec-prod" aria-labelledby="prod-h">
+      <h2 id="prod-h">Production and reserves</h2>
+      <div class="seg" role="group" aria-label="Country map shows">
+        <button type="button" data-metric="prod" aria-pressed="true">Production</button>
+        <button type="button" data-metric="res" aria-pressed="false">Reserves</button>
+      </div>
+      <div id="timeline" class="timeline" hidden>
+        <button type="button" id="play" aria-label="Play production history">▶</button>
+        <input type="range" id="year" min="1970" max="2025" value="2025" aria-label="Year">
+        <span id="year-label" class="n">Latest</span>
+      </div>
+      <p id="prod-sum" class="note"></p>
+      <div id="ramp" class="ramp" aria-hidden="true"></div>
+      <ol id="top"></ol>
+    </section>
+
+    <section id="sec-interior" aria-labelledby="int-h" hidden>
+      <h2 id="int-h">Earth's interior</h2>
+      <div class="seg" role="group" aria-label="Interior view">
+        <button type="button" data-interior="layers" aria-pressed="true">Layers</button>
+        <button type="button" data-interior="tomo" aria-pressed="false">Seismic tomography</button>
+      </div>
+      <div id="int-layers">
+        <ul id="int-legend" class="int"></ul>
+        <p id="int-note" class="caveat"></p>
+      </div>
+      <div id="int-tomo" hidden>
+        <div id="tomo-depths" class="seg small" role="group" aria-label="Tomography depth"></div>
+        <div class="tomo-bar" aria-hidden="true"></div>
+        <div class="ramp-labels"><span id="tomo-lo">slower</span><span>average</span><span id="tomo-hi">faster</span></div>
+        <p class="note">Shown through a translucent surface, with the cutaway off.</p>
+        <p class="caveat">Measured data: shear-wave speed at this depth compared with the global average, from the TX2011 model (Grand, 2002). Red is slower, often hotter rock; blue is faster, often colder sinking slabs. Resolution is about 2 degrees and smoothed.</p>
+      </div>
+    </section>
+
+    <section id="sec-trade" aria-labelledby="trade-h" hidden>
+      <h2 id="trade-h">Trade flows</h2>
+      <p id="trade-sum" class="note"></p>
+      <ol id="trade-top"></ol>
+    </section>
+
+    <section id="site" hidden aria-live="polite"></section>
+
+    <section class="provenance">
+      <h2>Sources</h2>
+      <ul id="sources"></ul>
+      <p id="caveat" class="caveat">MRDS is no longer systematically updated and is heavily weighted toward U.S. sites. No marker does not mean no deposit.</p>
+      <p id="terrain" class="terrain"></p>
+    </section>
+
+    <button id="collapse" class="collapse" aria-expanded="true">Hide panel</button>
+  </aside>
+
+  <div id="ptable-wrap" class="ptable-wrap">
+    <button id="ptable-toggle" class="ptable-toggle" aria-expanded="true">Periodic table</button>
+    <div id="ptable" class="ptable" role="grid" aria-label="Periodic table"></div>
+    <p class="ptable-key"><span class="k k-sites"></span>Deposit sites <span class="k k-prod"></span>Production only <span class="k k-none"></span>No public data <span class="k k-crit"></span>U.S. critical mineral (2025)</p>
+  </div>
+
+  <div id="loading" role="status">Loading the globe…</div>
+  <script src="app.js"></script>
+</body>
+</html>

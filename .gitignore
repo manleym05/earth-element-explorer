@@ -1,0 +1,18 @@
+# secrets: keep your token out of the repo (copy web/config.example.js to web/config.js)
+web/config.js
+# generated
+mobile/www/
+mobile/ios/
+mobile/android/
+node_modules/
+# raw pipeline inputs (hundreds of MB; download with the URLs in web/README.md)
+inputs/
+*.nc
+mrds.csv
+mrds-csv.zip
+bgs2024.json
+bgs_hist.json
+ga_occ.json
+minedb/
+__pycache__/
+.DS_Store
