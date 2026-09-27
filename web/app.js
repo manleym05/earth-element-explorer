@@ -582,7 +582,7 @@
     });
     interiorDS.show = S.cut > 0 || S.op.surface < 0.999;
     $("sec-interior").hidden = !interiorDS.show;
-    if (tomoPrim) tomoPrim.show = S.interior === "tomo" && interiorDS.show;
+    if (S.interior === "tomo") applyInteriorMode();
     restyle(); applyProdVisibility();
   }
   function applySurface() {
@@ -596,9 +596,12 @@
     if (tomoPrim) tomoPrim.show = S.interior === "tomo" && interiorDS.show;
     syncDepth();
   }
-  // tomography: a shell of 2°x2° cells at the chosen depth, colored from the measured slice
+  // tomography: a shell of 2°x2° cells at the chosen depth, colored from the measured slice.
+  // The shell lies wholly inside the ellipsoid, so Cesium's horizon culling would drop it whenever the globe is
+  // opaque; culling is off and, with the cutaway open, only the cells inside the wedge are shown (a floor at that
+  // depth), so nothing can draw over the surface outside the wedge.
   const TOMO = IDX.tomo || [];
-  let tomoData = null, tomoPrim = null, tomoBuiltFor = null;
+  let tomoData = null, tomoPrim = null, tomoBuiltFor = null, tomoCells = null, tomoAttrs = null;
   $("tomo-depths").innerHTML = TOMO.map((t) => `<button type="button" data-depth="${t.depth}" aria-pressed="${t.depth === S.tomoDepth}">${fmt(t.depth)} km</button>`).join("");
   $("tomo-depths").querySelectorAll("button").forEach((b) => (b.onclick = () => { S.tomoDepth = +b.dataset.depth; applyInteriorMode(); }));
   const SLOW = Cesium.Color.fromBytes(200, 50, 40), MID = Cesium.Color.fromBytes(242, 238, 230), FAST = Cesium.Color.fromBytes(40, 90, 190);
@@ -615,6 +618,7 @@
     if (!sl) return;
     if (tomoPrim) { scene.primitives.remove(tomoPrim); tomoPrim = null; }
     const lat = tomoData.lat, lon = tomoData.lon, h = -depth * 1000, inst = [];
+    tomoCells = []; tomoAttrs = null;
     const dLat = Math.abs(lat[1] - lat[0]), dLon = Math.abs(lon[1] - lon[0]);
     for (let i = 0; i < lat.length; i++) {
       for (let j = 0; j < lon.length; j++) {
@@ -622,16 +626,30 @@
         const w = Math.max(-179.999, lon[j] - dLon / 2), e = Math.min(179.999, lon[j] + dLon / 2);
         const sN = Math.max(-89.999, lat[i] - dLat / 2), n = Math.min(89.999, lat[i] + dLat / 2);
         inst.push(new Cesium.GeometryInstance({
+          id: tomoCells.length,
           geometry: new Cesium.RectangleGeometry({ rectangle: Cesium.Rectangle.fromDegrees(w, sN, e, n), height: h,
             granularity: Cesium.Math.toRadians(1), vertexFormat: Cesium.PerInstanceColorAppearance.FLAT_VERTEX_FORMAT }),
-          attributes: { color: Cesium.ColorGeometryInstanceAttribute.fromColor(v == null ? MID : tomoColor(v, sl.limit)) },
+          attributes: { color: Cesium.ColorGeometryInstanceAttribute.fromColor(v == null ? MID : tomoColor(v, sl.limit)),
+                        show: new Cesium.ShowGeometryInstanceAttribute(true) },
         }));
+        tomoCells.push([lon[j], lat[i]]);
       }
     }
-    tomoPrim = scene.primitives.add(new Cesium.Primitive({ geometryInstances: inst, asynchronous: true,
+    tomoPrim = scene.primitives.add(new Cesium.Primitive({ geometryInstances: inst, asynchronous: true, cull: false,
       appearance: new Cesium.PerInstanceColorAppearance({ flat: true, translucent: false }) }));
     tomoBuiltFor = depth;
     tomoPrim.show = S.interior === "tomo" && interiorDS.show;
+    maskTomo();
+  }
+  function maskTomo() {
+    if (!tomoPrim) return;
+    if (!tomoPrim.ready) {  // per-instance attributes exist only once the async build finishes
+      const prim = tomoPrim, off = scene.postRender.addEventListener(() => { if (prim.ready || prim.isDestroyed()) { off(); if (prim === tomoPrim) maskTomo(); } });
+      return;
+    }
+    if (!tomoAttrs) tomoAttrs = tomoCells.map((_, k) => tomoPrim.getGeometryInstanceAttributes(k));
+    const all = S.cut <= 0;
+    tomoCells.forEach(([lo, la], k) => { tomoAttrs[k].show = Cesium.ShowGeometryInstanceAttribute.toValue(all || inWedge(lo, la), tomoAttrs[k].show); });
   }
   function applyInteriorMode() {
     const tomo = S.interior === "tomo";
@@ -641,10 +659,10 @@
     const t = TOMO.find((x) => x.depth === S.tomoDepth) || TOMO[TOMO.length - 1];
     if (!t) return;
     const rr = (6371 - t.depth) * 1000;
-    shells.forEach(({ L, a, b }) => { a.show = b.show = !tomo || L.r * 1000 <= rr + 1; });
+    shells.forEach(({ L, a, b }) => { a.show = b.show = !tomo || S.cut > 0 || L.r * 1000 <= rr + 1; });
     if (tomo) {
       $("tomo-lo").textContent = `-${t.limit}% slower`; $("tomo-hi").textContent = `+${t.limit}% faster`;
-      if (tomoBuiltFor !== t.depth) buildTomo(t.depth);
+      if (tomoBuiltFor !== t.depth) buildTomo(t.depth); else maskTomo();
     }
     if (tomoPrim) tomoPrim.show = tomo && interiorDS.show;
   }
@@ -930,13 +948,10 @@
     S.interior = b.dataset.interior;
     const cut = $("cut"), surf = document.querySelector('[data-opacity="surface"]');
     if (S.interior === "tomo") {
-      // Tomography is viewed through a translucent surface; the wedge view hides the slice.
-      if (S.cut > 0) { cut.value = 0; S.cut = 0; applyCut(); }
-      if (S.op.surface > 0.4) { surf.value = 25; surf.dispatchEvent(new Event("input")); }
-      cut.disabled = true;
-      $("cut-note").textContent = "The cutaway is off in tomography mode. The slice shows through the translucent surface; drag Surface imagery to adjust.";
+      // With no wedge open, fade the surface so the slice shows through; with a wedge, the slice fills its floor.
+      if (S.cut <= 0 && S.op.surface > 0.4) { surf.value = 25; surf.dispatchEvent(new Event("input")); }
+      $("cut-note").textContent = "Open the wedge to see the slice at the chosen depth, or lower Surface imagery to see the whole slice through the planet.";
     } else {
-      cut.disabled = false;
       $("cut-note").textContent = "Slide to open a wedge facing you. Lowering surface opacity shows the interior through the planet.";
     }
     applyInteriorMode();
@@ -971,7 +986,7 @@
     hashTimer = setTimeout(() => {
       if (!S.entry) return;
       const c = camera.positionCartographic;
-      const v = [c.longitude * R2D, c.latitude * R2D].map((x) => x.toFixed(3)).concat([Math.round(c.height), (camera.heading * R2D).toFixed(0), (camera.pitch * R2D).toFixed(0)]);
+      const v = [c.longitude * R2D, c.latitude * R2D].map((x) => x.toFixed(3)).concat([Math.round(c.height), Math.round(camera.heading * R2D) % 360, Math.round(camera.pitch * R2D)]);
       history.replaceState(null, "", `#${S.entry.sym}@${v.join(",")}`);
     }, 400);
   }
@@ -984,12 +999,19 @@
   });
   camera.changed.addEventListener(() => { syncDepth(); updateMode(); });
 
-  const [start, view] = decodeURIComponent((location.hash || "").slice(1)).split("@");
-  if (view) {
-    const v = view.split(",").map(Number);
-    if (v.length >= 3 && v.every(Number.isFinite)) camera.setView({ destination: Cesium.Cartesian3.fromDegrees(v[0], v[1], v[2]),
-      orientation: { heading: (v[3] || 0) * D2R, pitch: (v.length > 4 ? v[4] : -90) * D2R, roll: 0 } });
+  // #Sym@lon,lat,height,heading,pitch — read at startup and whenever a link is pasted into an open tab
+  // (the app itself writes the hash with replaceState, which doesn't fire hashchange)
+  async function applyHash() {
+    const [start, view] = decodeURIComponent((location.hash || "").slice(1)).split("@");
+    if (view) {
+      const v = view.split(",").map(Number);
+      if (v.length >= 3 && v.every(Number.isFinite)) camera.setView({ destination: Cesium.Cartesian3.fromDegrees(v[0], v[1], v[2]),
+        orientation: { heading: (v[3] || 0) * D2R, pitch: (v.length > 4 ? v[4] : -90) * D2R, roll: 0 } });
+    }
+    const sym = BY_SYM[start] ? start : S.entry ? null : "Au";
+    if (sym && (!S.entry || S.entry.sym !== sym)) await selectElement(sym);
   }
-  await selectElement(BY_SYM[start] ? start : "Au");
+  window.addEventListener("hashchange", applyHash);
+  await applyHash();
   window.__explorer = { viewer, points, bins, S, selectElement, showSite, showCountry, applyCut, applySurface };
 })();

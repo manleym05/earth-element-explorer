@@ -31,7 +31,7 @@ Commercial use needs a paid ion plan or self-hosted terrain.
 - Interior: share of each element in crust, mantle and core, estimated from GERM reservoir concentrations
   (continental crust: Rudnick & Gao; primitive mantle: McDonough & Sun; core: McDonough) and layer masses.
 - Seismic tomography: TX2011 (Grand 2002) shear-velocity slices at 200-2,800 km, shown through a
-  translucent surface (the cutaway is off in this mode).
+  translucent surface or as the floor of the cutaway wedge.
 - Production history 1970-2024 (BGS) with a year slider and play button.
 - Trade flows (UN Comtrade 2023): arcs from each top-6 exporter to its 5 largest destinations.
 - Tectonic plate boundaries (PB2002, Bird 2003) as a toggle layer.
