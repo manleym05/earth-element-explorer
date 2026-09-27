@@ -14,10 +14,10 @@ except for terrain and imagery tiles from Cesium ion. The wrapper is Capacitor 7
 3. **Data terms.** Confirm reuse terms for BGS World Mineral Statistics and UN Comtrade in a published
    app. USGS data is public domain; MinCan and the mine production database are CC BY 4.0; PB2002 is
    ODC-By. The app credits every source in its Sources panel.
-4. **Bundle ID.** Replace `com.CHANGEME.earthexplorer` in `capacitor.config.json` with your own
-   reverse-domain ID. It can't change after the first upload.
-5. **Privacy policy.** Fill in the date and contact email in `www/privacy.html` and host it at a public
-   URL (App Store Connect requires the URL).
+4. **Bundle ID.** `io.github.manleym05.earthexplorer` (in `capacitor.config.json`). It can't change after the
+   first store upload.
+5. **Privacy policy.** `web/privacy.html`, live at https://earth-element-explorer.pages.dev/privacy.html (the
+   URL both stores ask for) and copied into the app by `npm run sync`.
 
 ## iOS (needs macOS + Xcode 16; Apple Developer Program, $99/year)
 You're on Windows. Options: a Mac, a rented cloud Mac (e.g. MacinCloud), or a CI service that builds

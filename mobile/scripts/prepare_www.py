@@ -10,7 +10,7 @@ if not os.path.exists(os.path.join(WWW, "config.js")):
     shutil.copy(os.path.join(WEB, "config.example.js"), os.path.join(WWW, "config.js"))
 shutil.copytree(os.path.join(MOB, "node_modules", "cesium", "Build", "Cesium"), os.path.join(WWW, "cesium"))
 shutil.copytree(os.path.join(HERE, "fonts"), os.path.join(WWW, "fonts"))
-shutil.copy(os.path.join(HERE, "fonts.css"), WWW); shutil.copy(os.path.join(HERE, "privacy.html"), WWW)
+shutil.copy(os.path.join(HERE, "fonts.css"), WWW)  # privacy.html comes along from web/
 p = os.path.join(WWW, "index.html"); h = open(p).read()
 h = re.sub(r"\s*<link rel=\"preconnect\"[^>]*>", "", h)
 h = re.sub(r'<link href="https://fonts.googleapis.com[^"]*" rel="stylesheet">', '<link href="fonts.css" rel="stylesheet">', h)

@@ -1,5 +1,5 @@
 {
-  "appId": "com.CHANGEME.earthexplorer",
+  "appId": "io.github.manleym05.earthexplorer",
   "appName": "Earth Element Explorer",
   "webDir": "www",
   "backgroundColor": "#14222e",

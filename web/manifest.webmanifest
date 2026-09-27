@@ -1,0 +1,17 @@
+{
+  "name": "Earth Element Explorer",
+  "short_name": "Element Explorer",
+  "description": "3D globe of where each element is found, produced and traded, from public geological data.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#14222e",
+  "theme_color": "#14222e",
+  "categories": ["education", "reference"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
