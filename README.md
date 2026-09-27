@@ -16,5 +16,13 @@ Without a token the globe is flat with bundled Natural Earth imagery; with one, 
 Terrain and satellite imagery.
 
 ## Deploy
-Connect this repo to Cloudflare Pages: build command none, output directory `web`. Put the ion token in
-`web/config.js` at deploy time, or commit it only if the repo stays private.
+Live at https://earth-element-explorer.pages.dev (Cloudflare Pages, connected to this repo; every push to
+`main` redeploys). Pages settings:
+- Build command (writes `web/config.js` from an environment variable, so the token never enters git):
+
+      printf 'window.EARTH_CONFIG={CESIUM_ION_TOKEN:"%s",CESIUM_VERSION:"1.145.0"};' "$CESIUM_ION_TOKEN" > web/config.js
+- Build output directory: `web`
+- Environment variable: `CESIUM_ION_TOKEN` = the ion token. If it's empty the site falls back to the flat
+  globe.
+
+Add the deployed domain to the token's Allowed URLs at ion.cesium.com.

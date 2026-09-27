@@ -10,8 +10,9 @@ Opening index.html directly won't work (browsers block fetch() from file://). Li
 hash, e.g. http://localhost:8000/#Nd
 
 ## Deploy (free)
-Any static host works. Cloudflare Pages: create a project, upload this folder (no build command,
-output directory = root). Then add the deployed domain to the Cesium ion token's Allowed URLs.
+Any static host works. The live site is Cloudflare Pages connected to the GitHub repo, with output
+directory `web` and a one-line build command that writes `config.js` from the `CESIUM_ION_TOKEN`
+environment variable (see the root README). Add the deployed domain to the Cesium ion token's Allowed URLs.
 
 ## Terrain and imagery
 `config.js` holds a Cesium ion token (Community tier: free, non-commercial). Clear it to fall back to a
