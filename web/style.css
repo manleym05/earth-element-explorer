@@ -102,7 +102,9 @@ input[type=range] { accent-color: var(--gold); width: 110px; }
   border: 1px solid var(--line); border-radius: 10px;
 }
 .ptable-toggle { position: absolute; top: -30px; right: 0; background: var(--deep); border: 1px solid var(--line); border-radius: 7px 7px 0 0; border-bottom: 0; padding: 4px 12px; cursor: pointer; }
-.ptable-wrap.closed { padding: 0; border: 0; background: none; }
+/* collapsed: only the toggle stays; no blur strip, and taps pass through to the globe */
+.ptable-wrap.closed { padding: 0; border: 0; background: none; backdrop-filter: none; pointer-events: none; }
+.ptable-wrap.closed .ptable-toggle { pointer-events: auto; }
 .ptable-wrap.closed .ptable, .ptable-wrap.closed .ptable-key { display: none; }
 .ptable-wrap.closed .ptable-toggle { position: static; float: right; border-radius: 7px; border-bottom: 1px solid var(--line); }
 .ptable { display: grid; grid-template-columns: repeat(18, minmax(0, 1fr)); grid-template-rows: repeat(7, 27px) 6px 27px 27px; gap: 2px; }
