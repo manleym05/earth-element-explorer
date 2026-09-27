@@ -13,6 +13,10 @@ Inputs (download commands in README):
   minedb/data/*           Jasansky et al. 2023 open global mine production database (Zenodo 7369478)
   germ/r10.json r30.json r34.json   GERM reservoir tables: continental crust, primitive mantle, core
   tx2011.nc               TX2011 shear-velocity tomography (Grand 2002), EarthScope EMC
+  egdi_occ.json           EGDI / Minerals4EU mineral occurrences (egdi_mineraloccurrences_inspire WFS), CC BY 4.0
+                          except Poland (CC BY-NC-ND), which is left out
+
+Fetch them all with scripts/fetch_inputs.py.
 
 Outputs (app/data):
   elements.json           118 elements: layout, data availability, geochemical class
@@ -620,7 +624,75 @@ for fid, f in fac.items():
                             "country": f["country"], "dev": 0 if (f["status"] or "").lower() == "active" or pr and pr[0] >= 2016 else 5,
                             "dep": "", "primary": 1 if prim else 0, "with": f["prods"][:80], "id": f"minedb:{fid}", "grp": 0},
                    prod)
-print({ {4: "GA", 8: "MinCan", 16: "MineDB"}[k]: v for k, v in merge_stats.items()})
+# ---- EGDI / Minerals4EU (Europe) --------------------------------------------
+print("merging EGDI…", flush=True)
+EGDI_EXCLUDE = {"Poland"}  # Polish records are CC BY-NC-ND 4.0: no derivatives, so they stay out
+EGDI_IMPORTANCE = ["very large deposit", "large deposit", "medium sized deposit", "small deposit", "occurrence"]
+EGDI_ACTIVE = {"operating", "operatingcontinuously", "operatingintermittently"}
+EGDI_PAST = {"abandoned", "historic", "notoperating", "closed", "careandmaintenance", "retention"}
+EGDI_PLANNED = {"pendingapproval", "underdevelopment", "feasibility", "construction"}
+def egdi_dev(r):
+    st = (r.get("mine_status") or "").lower()
+    if st in EGDI_ACTIVE:
+        return 0
+    if st in EGDI_PAST:
+        return 1
+    if st in EGDI_PLANNED:
+        return 2
+    ot = (r.get("occurrence_type") or "").lower()  # mine_status "no mine": fall back to the occurrence type, as for GA
+    return 3 if ot == "occurrence" else 2 if ot else 5
+def egdi_op(r):
+    m = (r.get("mining_activity_types") or "").lower()
+    ug = "underground" in m or "subsurface" in m
+    sf = any(w in m for w in ("open pit", "surface mining", "quarry"))
+    if ug and sf: return 2
+    if ug: return 1
+    if sf: return 0
+    if "alluvial" in m: return 3
+    if "borehole" in m: return 4
+    if "underwater" in m: return 5
+    return 7
+egdi_rows = [r for r in json.load(open(p("egdi_occ.json"))) if (r.get("country") or "") not in EGDI_EXCLUDE]
+egdi_occ = collections.defaultdict(list)  # the WFS has one row per occurrence x commodity
+for r in egdi_rows:
+    egdi_occ[r.get("mineraloccurrencedbk_hidden") or r.get("inspireid")].append(r)
+egdi_unmapped = collections.Counter()
+def egdi_syms(c):
+    return [s2 for sy in name_syms(c)[0] for s2 in GROUP_TAGS.get(sy, [sy])]
+for key, rs in egdi_occ.items():
+    r0 = rs[0]
+    try:
+        lat, lon = float(r0["latitude"]), float(r0["longitude"])
+    except (TypeError, ValueError):
+        continue
+    per = {}  # symbol -> best importance rank at this occurrence
+    for r in rs:
+        syms = name_syms(r.get("commodity"))[0] or name_syms(r.get("inspire_commodity"))[0]
+        el = (r.get("crm_2023_element") or "").strip()
+        if not syms and el in EL_BY_NAME.values():
+            syms = [el]
+        if not syms:
+            egdi_unmapped[r.get("commodity") or r.get("inspire_commodity") or ""] += 1
+        imp = r.get("commodity_importance") or ""
+        rank = EGDI_IMPORTANCE.index(imp) if imp in EGDI_IMPORTANCE else len(EGDI_IMPORTANCE)
+        for sy in syms:
+            for s2 in GROUP_TAGS.get(sy, [sy]):
+                per[s2] = min(per.get(s2, 99), rank)
+    if not per:
+        continue
+    top = min(per.values())
+    comms = sorted({r.get("commodity") or "" for r in rs} - {""})
+    kind = r0.get("deposit_type") or r0.get("deposit_group") or r0.get("occurrence_type") or "occurrence"
+    for sy, rank in per.items():
+        imp = EGDI_IMPORTANCE[rank] if rank < len(EGDI_IMPORTANCE) else ""
+        merge_stats[32]["records"] += 1
+        merge_site(sy, 32, {"lat": round(lat, 4), "lon": round(lon, 4), "name": r0.get("name") or "",
+                            "country": r0.get("country") or "", "dev": egdi_dev(r0), "op": egdi_op(r0),
+                            "dep": f"EGDI: {kind}" + (f" ({imp})" if imp else ""), "primary": 1 if rank == top else 0,
+                            "with": ", ".join(c for c in comms if sy not in egdi_syms(c))[:80],
+                            "id": "egdi:" + str(r0.get("inspireid") or key), "grp": 0})
+print("EGDI rows:", len(egdi_rows), "occurrences:", len(egdi_occ), "top unmapped commodities:", egdi_unmapped.most_common(12))
+print({ {4: "GA", 8: "MinCan", 16: "MineDB", 32: "EGDI"}[k]: v for k, v in merge_stats.items()})
 
 # ---- reserves + critical-mineral flags (USGS MCS 2026) ---------------------
 def mcs_reserves(sym):
@@ -768,7 +840,20 @@ SOURCES = {
                "url": "https://doi.org/10.5281/zenodo.7369478", "date": "2023"},
     "germ": {"name": "GERM Reservoir Database (EarthRef): continental crust, primitive mantle, core", "url": "https://earthref.org/GERM/"},
     "tomo": {"name": "TX2011 shear-velocity model (Grand 2002), via EarthScope EMC", "url": "https://doi.org/10.17611/DP/9991721"},
+    "egdi": {"name": "EGDI mineral occurrences (EuroGeoSurveys; Minerals4EU and successor projects), CC BY 4.0; Polish records (CC BY-NC-ND) not included",
+             "url": "https://www.europe-geology.eu/scientific-themes/mineral-resources/", "date": "retrieved " + TODAY},
+    # written by build_history.py / fetch_trade.py outputs; listed here so a rebuild keeps their credits
+    "comtrade": {"name": "UN Comtrade (public preview API), 2023 annual trade by HS code", "url": "https://comtradeplus.un.org/",
+                 "date": "retrieved 2026-09-27"},
+    "plates": {"name": "PB2002 plate boundaries (Bird 2003), GeoJSON by Ahlenius/Nordpil, ODC-By 1.0",
+               "url": "https://github.com/fraxen/tectonicplates"},
+    "bgshist": {"name": "BGS World Mineral Statistics, production 1970-2024", "url": "https://ogcapi.bgs.ac.uk/collections/world-mineral-statistics"},
 }
+# production-history index comes from build_history.py; keep it across rebuilds of this script
+try:
+    PREV_HIST = {e["sym"]: e.get("hist") for e in json.load(open(os.path.join(OUT, "elements.json")))["elements"]}
+except (OSError, ValueError, KeyError):
+    PREV_HIST = {}
 index = []
 for row in pub:
     z = int(row["AtomicNumber"]); sym = row["Symbol"]
@@ -788,7 +873,7 @@ for row in pub:
     entry = {"z": z, "sym": sym, "name": row["Name"], "x": x, "y": y, "block": row["GroupBlock"],
              "state": row["StandardState"], "class": GOLD.get(sym), "sites": n, "critical": crit,
              "prod": bool(prod and prod["countries"]), "prodWorldOnly": bool(prod and not prod["countries"] and prod["world"]),
-             "hosts": bool(hs)}
+             "hosts": bool(hs), "hist": PREV_HIST.get(sym)}
     if n or prod or ab or hs:
         out = {"element": {"z": z, "sym": sym, "name": row["Name"], "class": GOLD.get(sym), "critical": crit},
                "built": TODAY, "production": prod, "abundance": ab}
@@ -805,7 +890,7 @@ for row in pub:
             out["sites"] = enc
             out["dict"] = dicts
             out["stats"] = {"sites": n, "groupListed": sum(d["grp"]),
-                            "bySource": {str(b): sum(1 for v in d["src"] if v & b) for b in (1, 2, 4, 8, 16)}}
+                            "bySource": {str(b): sum(1 for v in d["src"] if v & b) for b in (1, 2, 4, 8, 16, 32)}}
         json.dump(out, open(os.path.join(OUT, "el", sym + ".json"), "w"), separators=(",", ":"), ensure_ascii=False)
         entry["file"] = f"el/{sym}.json"
     index.append(entry)

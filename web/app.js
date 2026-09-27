@@ -77,9 +77,9 @@
   const SRC_STYLE = [
     { label: "USGS MRDS", color: "#f2c230", size: 4.5 }, { label: "USGS rare earth database", color: "#e8e1c8", size: 5 },
     { label: "Geoscience Australia", color: "#6fb7e0", size: 4.5 }, { label: "MinCan (Canada)", color: "#e07a6f", size: 5 },
-    { label: "Global mine production database", color: "#63c9a0", size: 5.5 },
+    { label: "Global mine production database", color: "#63c9a0", size: 5.5 }, { label: "EGDI (Europe)", color: "#b7a4ea", size: 4.5 },
   ];
-  const srcOfId = (id) => { id = String(id); return id.startsWith("ree:") ? 1 : id.startsWith("ga:") ? 2 : id.startsWith("mincan:") ? 3 : id.startsWith("minedb:") ? 4 : 0; };
+  const srcOfId = (id) => { id = String(id); return id.startsWith("ree:") ? 1 : id.startsWith("ga:") ? 2 : id.startsWith("mincan:") ? 3 : id.startsWith("minedb:") ? 4 : id.startsWith("egdi:") ? 5 : 0; };
   const RAMP = ["#17485c", "#2b7f8c", "#57b8a5", "#b9e6c4"];
   const rampCss = (t) => {
     const x = Math.max(0, Math.min(1, t)) * (RAMP.length - 1), i = Math.min(RAMP.length - 2, Math.floor(x));
@@ -128,7 +128,7 @@
     ["ree", `Rare earth sites also from <a href="${SRC.ree.url}" target="_blank" rel="noopener">${SRC.ree.name}</a>, ${SRC.ree.date}. ${IDX.reeStats.matched_mrds} of its ${IDX.reeStats.records} located sites matched an MRDS site within 5 km and were merged; ${IDX.reeStats.added} were added.`],
     ["usgs", `Production: <a href="${SRC.usgs.url}" target="_blank" rel="noopener">${SRC.usgs.name}</a> (${SRC.usgs.date}), cross-checked against <a href="${SRC.bgs.url}" target="_blank" rel="noopener">${SRC.bgs.name}</a>, ${SRC.bgs.date}.`],
     ["more", (() => { const m = IDX.mergeStats; const f = (k) => `${fmt(m[k].added)} added, ${fmt(m[k].matched)} merged with an existing site within about 650 m`;
-      return `More sites: <a href="${SRC.ga.url}" target="_blank" rel="noopener">${SRC.ga.name}</a> (${f("4")}); <a href="${SRC.mincan.url}" target="_blank" rel="noopener">${SRC.mincan.name}</a> (${f("8")}); <a href="${SRC.minedb.url}" target="_blank" rel="noopener">${SRC.minedb.name}</a> (${f("16")}), which also adds mine-level output.`; })()],
+      return `More sites: <a href="${SRC.ga.url}" target="_blank" rel="noopener">${SRC.ga.name}</a> (${f("4")}); <a href="${SRC.mincan.url}" target="_blank" rel="noopener">${SRC.mincan.name}</a> (${f("8")}); <a href="${SRC.minedb.url}" target="_blank" rel="noopener">${SRC.minedb.name}</a> (${f("16")}), which also adds mine-level output; <a href="${SRC.egdi.url}" target="_blank" rel="noopener">${SRC.egdi.name}</a> (${f("32")}).`; })()],
     ["res", `Reserves and the critical-mineral flag: USGS MCS 2026 (2025 U.S. critical minerals list). Host-ore links follow the byproduct sources named in the MCS 2026 commodity chapters.`],
     ["germ", `Share of each element by layer: <a href="${SRC.germ.url}" target="_blank" rel="noopener">${SRC.germ.name}</a>. Tomography: <a href="${SRC.tomo.url}" target="_blank" rel="noopener">${SRC.tomo.name}</a>.`],
     ["new", `Production history: <a href="${SRC.bgshist.url}" target="_blank" rel="noopener">${SRC.bgshist.name}</a>. Trade: <a href="${SRC.comtrade.url}" target="_blank" rel="noopener">${SRC.comtrade.name}</a>. Plates: <a href="${SRC.plates.url}" target="_blank" rel="noopener">${SRC.plates.name}</a>.`],
@@ -269,7 +269,7 @@
     const d = S.data && S.data.sites, ul = $("legend");
     ul.innerHTML = "";
     if (!d) return;
-    const styles = S.colorBy === "dev" ? DEV_STYLE : OP_STYLE, counts = new Array(styles.length).fill(0);
+    const styles = STYLES[S.colorBy], counts = new Array(styles.length).fill(0);
     for (let i = 0; i < d.id.length; i++) counts[catOf(i)]++;
     styles.forEach((s, k) => {
       if (!counts[k]) return;
@@ -766,8 +766,9 @@
       : sid.startsWith("ga:") ? `Geoscience Australia record ${sid.slice(3)} (${link(SRC.ga.record + sid.slice(3), "open at GA")})`
       : sid.startsWith("mincan:") ? `MinCan row ${sid.slice(7)} (${link(SRC.mincan.url, "dataset")})`
       : sid.startsWith("minedb:") ? `Global mine production database, facility ${sid.slice(7)} (${link(SRC.minedb.url, "dataset")})`
+      : sid.startsWith("egdi:") ? `EGDI mineral occurrence ${sid.slice(5)} (${link(SRC.egdi.url, "EGDI")})`
       : `USGS MRDS record ${sid} (${link(SRC.mrds.record + sid, "open at USGS")}), file dated ${SRC.mrds.date}`;
-    const also = [[2, "USGS REE database"], [4, "Geoscience Australia"], [8, "MinCan"], [16, "global mine production database"], [1, "USGS MRDS"]]
+    const also = [[2, "USGS REE database"], [4, "Geoscience Australia"], [8, "MinCan"], [16, "global mine production database"], [32, "EGDI"], [1, "USGS MRDS"]]
       .filter(([bit, name]) => d.src[i] & bit && !primary.includes(name.replace("global m", "Global m"))).map(([, n]) => n);
     const src = primary + "." + (also.length ? ` Also in ${also.join(", ")}.` : "");
     $("site").innerHTML = `<h3>${esc(d.name[i] || "Unnamed site")}</h3><p class="where">${esc(where)}</p>` +

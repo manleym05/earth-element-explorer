@@ -22,8 +22,9 @@ Commercial use needs a paid ion plan or self-hosted terrain.
 ## What's in it
 - 118-element periodic table; 78 elements with mapped sites, 70 with production by country. Elements on
   the 2025 U.S. critical minerals list are marked.
-- Sites from USGS MRDS, USGS REE database, Geoscience Australia, MinCan (Canada) and the global mine
-  production database (Jasansky et al. 2023), merged within ~650 m. Cards list every source for a site.
+- Sites from USGS MRDS, USGS REE database, Geoscience Australia, MinCan (Canada), the global mine
+  production database (Jasansky et al. 2023) and EGDI (Europe; Polish records excluded, see below), merged
+  within ~650 m. Cards list every source for a site.
 - Production (USGS MCS 2026, cross-checked with BGS 2024) and reserves (USGS MCS 2026) by country.
 - Byproduct elements (Ga, Ge, In, Cd, Se, Te, Re, Bi, Co, Hf, Tl, As) show producing host-ore mines as
   hollow rings: likely sources inferred from the host ore, not confirmed output.
@@ -48,7 +49,12 @@ Commercial use needs a paid ion plan or self-hosted terrain.
   class (siderophile / lithophile / chalcophile / atmophile), which is inferred, not mapped.
 
 ## Rebuild the data
-Inputs go in one folder:
+    pip install h5py numpy openpyxl pillow
+    python scripts/fetch_inputs.py              # every input below into ../../inputs (~0.6 GB; resumable)
+    python scripts/build_data.py ../../inputs   # data/elements.json, data/el/*.json, data/countries.json, data/tomo/
+    python scripts/build_history.py <folder>    # optional: data/hist/*.json + data/plates.json (needs bgs_hist.json, pb2002.json)
+build_data.py keeps the history index from the previous elements.json, so the two scripts can run in either
+order. Trade (data/trade.json) comes from scripts/fetch_trade.py. The inputs, by hand:
     curl -LO https://mrdata.usgs.gov/mrds/mrds-csv.zip && unzip mrds-csv.zip             # mrds.csv
     mkdir ree && curl -L https://mrdata.usgs.gov/ree/ree-csv.zip -o r.zip && unzip r.zip && cp ree/main.csv ree/resource.csv ree/
     # mcs2026.csv: MCS2026_Commodities_Data.csv from https://doi.org/10.5066/P1WKQ63T
@@ -62,12 +68,11 @@ Inputs go in one folder:
     # minedb/: unzip https://zenodo.org/api/records/7369478/files/open_database_mine_production.zip/content
     # germ/r10.json, r30.json, r34.json: tables parsed from http://earthref.org/GERMRD/10/, /30/, /34/
     # tx2011.nc: https://data.earthscope.org/archive/seismology/products/emc/netcdf/TX2011_percent.r0.0-n4c.nc
+    # egdi_occ.json: egdi_mineraloccurrences_inspire from https://maps.europe-geology.eu/wfs/4326/ (WFS 2.0, geojson,
+    #   COUNT/STARTINDEX paging); the path must include an EPSG code, and the old mapname= form no longer works
     # bgs_hist.json: all 'Production' features for 1970-2024 from the BGS OGC API, keyed by year
     # pb2002.json: https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_boundaries.json
     # trade: see /home comment in scripts (UN Comtrade public preview API, 2023, HS codes per element)
-    pip install h5py numpy openpyxl pillow
-    python3 scripts/build_history.py <input_folder>   # data/hist/*.json, data/plates.json
-    python3 scripts/build_data.py <input_folder>     # writes data/elements.json, data/el/*.json, data/countries.json
 
 ## Known data limits (also shown in the app)
 - MRDS is no longer systematically updated (file dated 2022-08-23) and is heavily U.S.-weighted.
@@ -76,8 +81,9 @@ Inputs go in one folder:
   the app counts and labels these.
 - Rare-earth production is reported for the group, so every lanthanide shows the same country map.
 - USGS and BGS sometimes measure on different bases (ore vs. contained metal, oxide vs. element).
-- Europe has no national deposit source merged yet; coverage there is MRDS only (the EGDI service
-  returned server errors when this build was made).
+- Europe: EGDI harmonizes national survey records, so coverage and detail vary by country. Polish records
+  are licensed CC BY-NC-ND (no derivatives) and are left out; Poland shows MRDS sites only. EGDI mine status
+  and importance are mapped onto this app's status classes and may be coarser than the national source.
 - Trade arcs show declared exports for one HS code per element; some codes are refined metal (gold,
   platinum, palladium) or shared across elements (rare earths; niobium/tantalum/vanadium), as noted in-app.
 - Layer shares use continental crust only and primitive mantle for the whole mantle. Where a core value
