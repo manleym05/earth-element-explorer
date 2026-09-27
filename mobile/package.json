@@ -7,19 +7,19 @@
     "sync": "python3 scripts/prepare_www.py && npx cap sync",
     "ios": "npx cap open ios",
     "android": "npx cap open android",
-    "assets": "npx @capacitor/assets generate --iconBackgroundColor '#14222e' --splashBackgroundColor '#14222e'",
+    "assets": "npx @capacitor/assets generate --iconBackgroundColor \"#14222e\" --splashBackgroundColor \"#14222e\"",
     "prepare-www": "python3 scripts/prepare_www.py"
   },
   "dependencies": {
-    "@capacitor/android": "^7.0.0",
-    "@capacitor/core": "^7.0.0",
-    "@capacitor/ios": "^7.0.0",
-    "@capacitor/splash-screen": "^7.0.0",
-    "@capacitor/status-bar": "^7.0.0",
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/ios": "^8.5.2",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.3",
     "cesium": "1.145.0"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
-    "@capacitor/cli": "^7.0.0"
+    "@capacitor/cli": "^8.5.2"
   }
 }

@@ -1,7 +1,8 @@
 # Earth Element Explorer: mobile build
 
 `www/` is generated from `../web` by `npm run sync` (it copies the app and bundles Cesium and fonts): Cesium, fonts and all data are bundled, so it runs offline
-except for terrain and imagery tiles from Cesium ion. The wrapper is Capacitor 7 (iOS + Android).
+except for terrain and imagery tiles from Cesium ion. The wrapper is Capacitor 8 (iOS + Android;
+Android targets API 36, which Google Play requires for new apps from August 2026).
 
 ## Before you submit: decisions only you can make
 1. **Cesium ion license.** The token in `www/config.js` is on ion's free Community tier, which Cesium
@@ -36,11 +37,13 @@ work offline except terrain imagery." That pre-empts guideline 4.2 (minimum func
 apps): this app has substantial native-feeling interaction, but reviewers look for it.
 
 ## Android (works on Windows; Google Play Console, $25 once)
+Needs Android Studio (for the SDK) and JDK 21 (Android Studio's bundled Java 25 is too new for Gradle 8.14).
     npm install
     npm run prepare-www
-    npx cap add android
+    npx cap add android       # android/ is generated and gitignored
     npm run assets
     npx cap sync
+    cd android && gradlew assembleDebug   # set JAVA_HOME to JDK 21 first; APK in app/build/outputs/apk/debug/
     npx cap open android      # Android Studio: Build > Generate Signed App Bundle (.aab)
 Upload the .aab in Play Console, complete the Data safety form ("no data collected"), content rating
 and store listing. New personal developer accounts must run a closed test with testers before
