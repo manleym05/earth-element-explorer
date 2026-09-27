@@ -149,5 +149,10 @@
 
   <div id="loading" role="status">Loading the globe…</div>
   <script src="app.js"></script>
+  <script>
+    // Offline page for the installed web app (Microsoft Store / "Install"). Skipped on localhost, which also
+    // covers the Android app (served from https://localhost with everything bundled).
+    if ("serviceWorker" in navigator && location.hostname !== "localhost") navigator.serviceWorker.register("sw.js").catch(() => {});
+  </script>
 </body>
 </html>

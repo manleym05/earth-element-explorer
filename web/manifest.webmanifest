@@ -8,10 +8,60 @@
   "display": "standalone",
   "background_color": "#14222e",
   "theme_color": "#14222e",
-  "categories": ["education", "reference"],
+  "categories": [
+    "education",
+    "reference"
+  ],
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "lang": "en",
+  "dir": "ltr",
+  "screenshots": [
+    {
+      "src": "screenshots/1-copper.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Copper: where it is mined and produced worldwide, with trade flows"
+    },
+    {
+      "src": "screenshots/2-lithium.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Lithium: deposits and producing countries in South America's lithium triangle"
+    },
+    {
+      "src": "screenshots/3-iron-tomography.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Cutaway into the planet with a seismic tomography slice at 2,800 km"
+    },
+    {
+      "src": "screenshots/4-neodymium.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Neodymium and the rare earths: deposits, reserves and trade in Asia"
+    }
   ]
 }
