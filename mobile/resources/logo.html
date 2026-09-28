@@ -1,0 +1,113 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+  html, body { margin: 0; background: transparent; }
+  svg { display: block; }
+</style></head>
+<body>
+<svg id="logo" width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="space" cx="50%" cy="40%" r="75%">
+      <stop offset="0" stop-color="#16324a"/><stop offset="0.55" stop-color="#0b1a2b"/><stop offset="1" stop-color="#050b14"/>
+    </radialGradient>
+    <radialGradient id="ocean" cx="35%" cy="30%" r="80%">
+      <stop offset="0" stop-color="#5cc8f0"/><stop offset="0.45" stop-color="#1f7fb3"/><stop offset="1" stop-color="#0a2f4f"/>
+    </radialGradient>
+    <radialGradient id="land" cx="35%" cy="30%" r="85%">
+      <stop offset="0" stop-color="#9fe0a0"/><stop offset="0.5" stop-color="#4fae72"/><stop offset="1" stop-color="#1f6a4a"/>
+    </radialGradient>
+    <radialGradient id="shade" cx="30%" cy="25%" r="85%">
+      <stop offset="0.55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.55"/>
+    </radialGradient>
+    <radialGradient id="spec" cx="32%" cy="26%" r="30%">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="core" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(512 548) scale(182)">
+      <stop offset="0.3" stop-color="#ffe680"/><stop offset="0.65" stop-color="#ffb52a"/><stop offset="1" stop-color="#ff8418"/>
+    </radialGradient>
+    <radialGradient id="mantle" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(512 548) scale(330)">
+      <stop offset="0.5" stop-color="#ff5a24"/><stop offset="0.8" stop-color="#d23a1c"/><stop offset="1" stop-color="#8e2616"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#ffd24d" stop-opacity="0.9"/><stop offset="0.5" stop-color="#ff8a1f" stop-opacity="0.35"/><stop offset="1" stop-color="#ff5a00" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="atmo" cx="50%" cy="50%" r="50%">
+      <stop offset="0.86" stop-color="#6fd6ff" stop-opacity="0"/><stop offset="0.93" stop-color="#6fd6ff" stop-opacity="0.45"/><stop offset="1" stop-color="#6fd6ff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff2b3"/><stop offset="0.45" stop-color="#f5c542"/><stop offset="1" stop-color="#b8841a"/>
+    </linearGradient>
+    <filter id="blur12" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="12"/></filter>
+    <filter id="blur4" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"/></filter>
+    <filter id="drop" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000" flood-opacity="0.55"/></filter>
+    <!-- globe minus the upper-right wedge -->
+    <clipPath id="globeCut">
+      <path d="M512 548 L512 218 A330 330 0 1 0 842 548 Z"/>
+    </clipPath>
+    <clipPath id="wedge">
+      <path d="M512 548 L512 218 A330 330 0 0 1 842 548 Z"/>
+    </clipPath>
+  </defs>
+
+  <g id="bg">
+    <rect width="1024" height="1024" fill="url(#space)"/>
+    <g fill="#fff">
+      <circle cx="120" cy="140" r="3" opacity="0.8"/><circle cx="220" cy="80" r="2" opacity="0.6"/><circle cx="880" cy="120" r="3" opacity="0.8"/>
+      <circle cx="930" cy="300" r="2" opacity="0.5"/><circle cx="90" cy="420" r="2" opacity="0.5"/><circle cx="160" cy="880" r="2.5" opacity="0.6"/>
+      <circle cx="760" cy="70" r="2" opacity="0.5"/><circle cx="60" cy="700" r="2" opacity="0.4"/><circle cx="960" cy="620" r="2.5" opacity="0.5"/>
+      <path d="M840 190 l6 -18 l6 18 l18 6 l-18 6 l-6 18 l-6 -18 l-18 -6z" opacity="0.9"/>
+    </g>
+  </g>
+
+  <g id="planet" transform="translate(500 520) scale(1.13) translate(-512 -548)">
+    <!-- atmosphere halo -->
+    <circle cx="512" cy="548" r="372" fill="url(#atmo)"/>
+    <!-- globe surface with the wedge removed -->
+    <g clip-path="url(#globeCut)">
+      <circle cx="512" cy="548" r="330" fill="url(#ocean)"/>
+      <g fill="url(#land)">
+        <path d="M250 420 C300 350 400 330 440 380 C470 420 430 470 380 480 C340 490 330 540 290 540 C240 540 215 470 250 420Z"/>
+        <path d="M330 600 C370 570 430 590 440 640 C450 700 410 780 360 790 C320 790 300 720 310 670 C300 640 310 615 330 600Z"/>
+        <path d="M560 640 C610 600 700 610 730 660 C760 710 720 790 650 800 C590 810 560 760 570 720 C550 690 540 660 560 640Z"/>
+      </g>
+      <g fill="none" stroke="#dff6ff" stroke-opacity="0.16" stroke-width="3">
+        <ellipse cx="512" cy="548" rx="330" ry="110"/><ellipse cx="512" cy="548" rx="330" ry="230"/>
+        <ellipse cx="512" cy="548" rx="120" ry="330"/><ellipse cx="512" cy="548" rx="240" ry="330"/>
+        <line x1="182" y1="548" x2="842" y2="548"/><line x1="512" y1="218" x2="512" y2="878"/>
+      </g>
+      <circle cx="512" cy="548" r="330" fill="url(#shade)"/>
+      <circle cx="512" cy="548" r="330" fill="url(#spec)"/>
+    </g>
+    <!-- cutaway: crust, mantle, outer core, inner core -->
+    <g clip-path="url(#wedge)">
+      <circle cx="512" cy="548" r="330" fill="#7a5238"/>
+      <circle cx="512" cy="548" r="314" fill="url(#mantle)" stroke="#3a1a10" stroke-opacity="0.45" stroke-width="4"/>
+      <circle cx="512" cy="548" r="182" fill="url(#core)" stroke="#5a200e" stroke-opacity="0.5" stroke-width="4"/>
+      <circle cx="512" cy="548" r="70" fill="#fffdf0" stroke="#ffcf4a" stroke-opacity="0.8" stroke-width="4"/>
+      <circle cx="512" cy="548" r="70" fill="#fff" filter="url(#blur12)" opacity="0.9"/>
+    </g>
+    <!-- core glow spilling out of the wedge -->
+    <circle cx="560" cy="500" r="220" fill="url(#glow)" style="mix-blend-mode:screen" opacity="0.85"/>
+    <!-- cut edges -->
+    <path d="M512 218 L512 548 L842 548" fill="none" stroke="#ffb347" stroke-width="18" stroke-linejoin="round" opacity="0.45" filter="url(#blur4)"/>
+    <path d="M512 218 L512 548 L842 548" fill="none" stroke="#ffe7a3" stroke-width="7" stroke-linejoin="round" opacity="0.95"/>
+    <!-- gold deposit sparks -->
+    <g>
+      <g filter="url(#blur4)" fill="#ffd54a"><circle cx="330" cy="430" r="16"/><circle cx="390" cy="690" r="14"/><circle cx="650" cy="700" r="16"/><circle cx="300" cy="500" r="11"/></g>
+      <g fill="#fff6c9"><circle cx="330" cy="430" r="8"/><circle cx="390" cy="690" r="7"/><circle cx="650" cy="700" r="8"/><circle cx="300" cy="500" r="5.5"/></g>
+    </g>
+  </g>
+
+  <!-- periodic table tile -->
+  <g id="tile" filter="url(#drop)" transform="translate(690 700) rotate(-6)">
+    <rect x="0" y="0" width="250" height="250" rx="34" fill="#0f2233"/>
+    <rect x="7" y="7" width="236" height="236" rx="28" fill="none" stroke="url(#gold)" stroke-width="12"/>
+    <text x="36" y="66" font-family="Segoe UI, Arial, sans-serif" font-weight="700" font-size="44" fill="#f5c542">79</text>
+    <text x="125" y="196" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="800" font-size="138" fill="url(#gold)" letter-spacing="-4">Au</text>
+  </g>
+</svg>
+<script>
+  // ?bg=0 renders without the space background (transparent icon variant)
+  if (new URLSearchParams(location.search).get("bg") === "0") document.getElementById("bg").remove();
+</script>
+</body></html>
